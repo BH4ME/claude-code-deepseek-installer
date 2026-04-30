@@ -14,6 +14,7 @@
   - API 地址：`https://api.deepseek.com/anthropic`
   - 模型：`deepseek-v4-flash`
 - 保留已有 `settings.json` 里的其他配置项
+- 自动安装 DeepSeek 模型切换工具，可以在 `deepseek-v4-flash` 和 `deepseek-v4-pro` 之间切换
 - 可选安装 `cc-switch`，方便用图形界面切换和管理 Claude Code provider
 
 ## 准备 DeepSeek API Key
@@ -190,7 +191,36 @@ Get-Content "$HOME\.claude\settings.json"
 
 ## 切换模型
 
-默认模型是 `deepseek-v4-flash`。如果你想改成 `deepseek-v4-pro`，可以在安装时传入：
+默认模型是 `deepseek-v4-flash`。安装完成后，不用 cc-switch 也可以切换模型。
+
+Linux/macOS:
+
+```bash
+claude-deepseek flash
+claude-deepseek pro
+```
+
+如果终端找不到 `claude-deepseek`，直接运行完整路径：
+
+```bash
+~/.local/bin/claude-deepseek flash
+~/.local/bin/claude-deepseek pro
+```
+
+Windows:
+
+```powershell
+& "$HOME\.claude-deepseek\claude-deepseek.cmd" flash
+& "$HOME\.claude-deepseek\claude-deepseek.cmd" pro
+```
+
+切换后重新运行：
+
+```bash
+claude
+```
+
+也可以在安装时直接指定模型：
 
 Linux:
 
@@ -209,6 +239,30 @@ DeepSeek Anthropic-compatible API 当前常用模型名：
 
 - `deepseek-v4-flash`
 - `deepseek-v4-pro`
+
+## 不使用 cc-switch
+
+如果你只想用 Claude Code + DeepSeek，不想装 cc-switch，直接运行默认安装命令即可：
+
+Linux/macOS:
+
+```bash
+curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | bash
+```
+
+Windows:
+
+```powershell
+irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
+```
+
+安装时输入 DeepSeek API key。之后：
+
+```bash
+claude
+```
+
+需要切换模型时，使用上面的 `claude-deepseek flash` 或 `claude-deepseek pro`。这个方式不依赖 cc-switch。
 
 ## 使用 cc-switch
 

@@ -24,6 +24,23 @@ function Install-CcSwitch {
   Write-Host "cc-switch installer finished."
 }
 
+function Install-DeepSeekSwitcher {
+  $installDir = Join-Path $HOME ".claude-deepseek"
+  $scriptPath = Join-Path $installDir "switch-deepseek.ps1"
+  $cmdPath = Join-Path $installDir "claude-deepseek.cmd"
+  $scriptUrl = if ($env:DEEPSEEK_SWITCHER_PS1_URL) { $env:DEEPSEEK_SWITCHER_PS1_URL } else { "https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/switch-deepseek.ps1" }
+  $cmdUrl = if ($env:DEEPSEEK_SWITCHER_CMD_URL) { $env:DEEPSEEK_SWITCHER_CMD_URL } else { "https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/claude-deepseek.cmd" }
+
+  New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+  Invoke-WebRequest -Uri $scriptUrl -OutFile $scriptPath
+  Invoke-WebRequest -Uri $cmdUrl -OutFile $cmdPath
+
+  Write-Host "DeepSeek model switcher installed to: $installDir"
+  Write-Host "Switch models with:"
+  Write-Host "  $cmdPath flash"
+  Write-Host "  $cmdPath pro"
+}
+
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
   throw "Node.js is required. Install Node.js first, then rerun this installer."
 }
@@ -101,6 +118,8 @@ else {
   Write-Host "Skipped DeepSeek API configuration. Use cc-switch later to bind your DeepSeek API key and model."
 }
 Write-Host "Run: claude"
+
+Install-DeepSeekSwitcher
 
 if ($InstallCcSwitch) {
   Install-CcSwitch

@@ -95,6 +95,31 @@ NODE
   echo "Run cc-switch with: ${target}"
 }
 
+install_deepseek_switcher() {
+  local install_dir target source_url
+
+  install_dir="${HOME}/.local/bin"
+  target="${install_dir}/claude-deepseek"
+  source_url="${DEEPSEEK_SWITCHER_URL:-https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/switch-deepseek.sh}"
+
+  mkdir -p "${install_dir}"
+
+  if [ -f "./switch-deepseek.sh" ]; then
+    cp "./switch-deepseek.sh" "${target}"
+  else
+    curl -fsSL "${source_url}" -o "${target}"
+  fi
+
+  chmod +x "${target}"
+  echo "DeepSeek model switcher installed to: ${target}"
+  if [[ ":${PATH}:" != *":${install_dir}:"* ]]; then
+    echo "Add this to your shell profile if claude-deepseek is not found:"
+    echo "export PATH=\"${install_dir}:\$PATH\""
+  fi
+  echo "Switch models with: ${target} flash"
+  echo "Switch models with: ${target} pro"
+}
+
 if ! command -v node >/dev/null 2>&1; then
   echo "Node.js is required. Install Node.js first, then rerun this installer."
   exit 1
@@ -179,6 +204,8 @@ else
   echo "Skipped DeepSeek API configuration. Use cc-switch later to bind your DeepSeek API key and model."
 fi
 echo "Run: claude"
+
+install_deepseek_switcher
 
 if [ "${INSTALL_CC_SWITCH}" = "1" ]; then
   install_cc_switch
