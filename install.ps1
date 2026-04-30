@@ -2,6 +2,26 @@ $ErrorActionPreference = "Stop"
 
 $Model = if ($env:DEEPSEEK_MODEL) { $env:DEEPSEEK_MODEL } else { "deepseek-v4-flash" }
 $BaseUrl = if ($env:DEEPSEEK_ANTHROPIC_BASE_URL) { $env:DEEPSEEK_ANTHROPIC_BASE_URL } else { "https://api.deepseek.com/anthropic" }
+$InstallCcSwitch = $env:INSTALL_CC_SWITCH -eq "1"
+
+function Install-CcSwitch {
+  Write-Host "Fetching latest cc-switch release..."
+  $release = Invoke-RestMethod -Uri "https://api.github.com/repos/farion1231/cc-switch/releases/latest" -Headers @{ "User-Agent" = "claude-code-deepseek-installer" }
+  $asset = $release.assets | Where-Object { $_.name -match "Windows\.msi$" } | Select-Object -First 1
+
+  if (-not $asset) {
+    Write-Warning "No cc-switch Windows MSI asset found. Download manually from https://github.com/farion1231/cc-switch/releases/latest"
+    return
+  }
+
+  $installer = Join-Path $env:TEMP $asset.name
+  Write-Host "Downloading $($asset.name)..."
+  Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $installer
+
+  Write-Host "Starting cc-switch installer..."
+  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$installer`" /passive" -Wait
+  Write-Host "cc-switch installer finished."
+}
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
   throw "Node.js is required. Install Node.js first, then rerun this installer."
@@ -75,3 +95,7 @@ fs.writeFileSync(settingsFile, `${JSON.stringify(settings, null, 2)}\n`, { mode:
 
 Write-Host "Done. Claude Code is configured for DeepSeek model: $Model"
 Write-Host "Run: claude"
+
+if ($InstallCcSwitch) {
+  Install-CcSwitch
+}

@@ -14,6 +14,7 @@
   - API 地址：`https://api.deepseek.com/anthropic`
   - 模型：`deepseek-v4-flash`
 - 保留已有 `settings.json` 里的其他配置项
+- 可选安装 `cc-switch`，方便用图形界面切换和管理 Claude Code provider
 
 ## 准备 DeepSeek API Key
 
@@ -52,6 +53,18 @@ curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/late
 
 ```bash
 curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | DEEPSEEK_API_KEY="<your-deepseek-api-key>" bash
+```
+
+同时安装 cc-switch：
+
+```bash
+curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | bash -s -- --with-cc-switch
+```
+
+非交互式安装并同时安装 cc-switch：
+
+```bash
+curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | DEEPSEEK_API_KEY="<your-deepseek-api-key>" INSTALL_CC_SWITCH=1 bash
 ```
 
 ### 3. 验证 Claude Code
@@ -98,6 +111,21 @@ irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/down
 
 ```powershell
 $env:DEEPSEEK_API_KEY="<your-deepseek-api-key>"
+irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
+```
+
+同时安装 cc-switch：
+
+```powershell
+$env:INSTALL_CC_SWITCH="1"
+irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
+```
+
+非交互式安装并同时安装 cc-switch：
+
+```powershell
+$env:DEEPSEEK_API_KEY="<your-deepseek-api-key>"
+$env:INSTALL_CC_SWITCH="1"
 irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
 ```
 
@@ -168,6 +196,63 @@ DeepSeek Anthropic-compatible API 当前常用模型名：
 - `deepseek-v4-flash`
 - `deepseek-v4-pro`
 
+## 使用 cc-switch
+
+cc-switch 是一个图形界面工具，可以用来管理 Claude Code、Codex、Gemini 等工具的 provider 配置。
+
+这个项目里的 cc-switch 安装是可选的，因为很多 Linux 服务器没有桌面环境。如果你需要图形界面管理 provider，请使用上面的 `--with-cc-switch` 或 `INSTALL_CC_SWITCH=1`。
+
+### Linux
+
+安装脚本会下载最新版 cc-switch AppImage，并保存为：
+
+```bash
+~/.local/bin/cc-switch
+```
+
+运行：
+
+```bash
+~/.local/bin/cc-switch
+```
+
+如果你已经把 `~/.local/bin` 加入 PATH，也可以直接运行：
+
+```bash
+cc-switch
+```
+
+### Windows
+
+安装脚本会下载最新版 cc-switch Windows MSI，并启动安装器。安装完成后，可以从开始菜单打开 `CC Switch`。
+
+### 在 cc-switch 里绑定 DeepSeek
+
+如果你想在 cc-switch 图形界面里手动检查或重新绑定：
+
+1. 打开 `CC Switch`。
+2. 找到 Claude Code provider 配置。
+3. 设置 API base URL：
+
+```text
+https://api.deepseek.com/anthropic
+```
+
+4. 设置 API key 为你的 DeepSeek API key。
+5. 设置模型名：
+
+```text
+deepseek-v4-flash
+```
+
+6. 应用配置后，重新打开终端运行：
+
+```bash
+claude
+```
+
+注意：不要在 cc-switch 里选择不受 DeepSeek Anthropic-compatible API 支持的模型名，例如旧的 `DeepSeek-V3.2`，否则 Claude Code 可能会报 `API Error: 400`。
+
 ## 常见问题
 
 ### `claude` 命令找不到
@@ -207,4 +292,3 @@ deepseek-v4-pro
 - 不要把真实 API key 提交到 GitHub。
 - 不要把真实 API key 写进 shell history、公开文档或截图。
 - 如果 key 曾经出现在终端输出、issue、聊天截图或公开仓库里，建议立刻到 DeepSeek 控制台轮换。
-

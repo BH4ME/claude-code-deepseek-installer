@@ -3,6 +3,92 @@ set -euo pipefail
 
 MODEL="${DEEPSEEK_MODEL:-deepseek-v4-flash}"
 BASE_URL="${DEEPSEEK_ANTHROPIC_BASE_URL:-https://api.deepseek.com/anthropic}"
+INSTALL_CC_SWITCH="${INSTALL_CC_SWITCH:-0}"
+
+for arg in "$@"; do
+  case "${arg}" in
+    --with-cc-switch)
+      INSTALL_CC_SWITCH="1"
+      ;;
+    --help|-h)
+      echo "Usage: install.sh [--with-cc-switch]"
+      echo ""
+      echo "Environment:"
+      echo "  DEEPSEEK_API_KEY                 DeepSeek API key"
+      echo "  DEEPSEEK_MODEL                   Model name, default: deepseek-v4-flash"
+      echo "  DEEPSEEK_ANTHROPIC_BASE_URL      API base URL"
+      echo "  INSTALL_CC_SWITCH=1              Also install cc-switch"
+      exit 0
+      ;;
+  esac
+done
+
+install_cc_switch() {
+  local os arch asset_pattern install_dir target url
+
+  os="$(uname -s)"
+  arch="$(uname -m)"
+
+  if [ "${os}" != "Linux" ]; then
+    echo "cc-switch auto-install from this script currently supports Linux only."
+    echo "Download other platforms from: https://github.com/farion1231/cc-switch/releases/latest"
+    return 0
+  fi
+
+  case "${arch}" in
+    x86_64|amd64)
+      asset_pattern="Linux-x86_64.AppImage$"
+      ;;
+    arm64|aarch64)
+      asset_pattern="Linux-arm64.AppImage$"
+      ;;
+    *)
+      echo "Unsupported Linux architecture for cc-switch AppImage: ${arch}"
+      echo "Download manually from: https://github.com/farion1231/cc-switch/releases/latest"
+      return 0
+      ;;
+  esac
+
+  echo "Fetching latest cc-switch release..."
+  url="$(ASSET_PATTERN="${asset_pattern}" node <<'NODE'
+const https = require("https");
+
+const pattern = new RegExp(process.env.ASSET_PATTERN);
+
+https.get("https://api.github.com/repos/farion1231/cc-switch/releases/latest", {
+  headers: { "User-Agent": "claude-code-deepseek-installer" },
+}, (res) => {
+  let body = "";
+  res.on("data", (chunk) => body += chunk);
+  res.on("end", () => {
+    const release = JSON.parse(body);
+    const asset = release.assets.find((item) => pattern.test(item.name));
+    if (!asset) {
+      console.error("No matching cc-switch asset found.");
+      process.exit(1);
+    }
+    process.stdout.write(asset.browser_download_url);
+  });
+}).on("error", (error) => {
+  console.error(error.message);
+  process.exit(1);
+});
+NODE
+)"
+
+  install_dir="${HOME}/.local/bin"
+  target="${install_dir}/cc-switch"
+  mkdir -p "${install_dir}"
+  curl -fL "${url}" -o "${target}"
+  chmod +x "${target}"
+
+  echo "cc-switch installed to: ${target}"
+  if [[ ":${PATH}:" != *":${install_dir}:"* ]]; then
+    echo "Add this to your shell profile if cc-switch is not found:"
+    echo "export PATH=\"${install_dir}:\$PATH\""
+  fi
+  echo "Run cc-switch with: ${target}"
+}
 
 if ! command -v node >/dev/null 2>&1; then
   echo "Node.js is required. Install Node.js first, then rerun this installer."
@@ -15,10 +101,14 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 
 if [ -z "${DEEPSEEK_API_KEY:-}" ]; then
+  if [ ! -r /dev/tty ]; then
+    echo "DeepSeek API key is required. Set DEEPSEEK_API_KEY for non-interactive installs."
+    exit 1
+  fi
   printf "Enter your DeepSeek API key: "
-  stty -echo
-  read -r DEEPSEEK_API_KEY
-  stty echo
+  stty -echo < /dev/tty
+  read -r DEEPSEEK_API_KEY < /dev/tty
+  stty echo < /dev/tty
   printf "\n"
 fi
 
@@ -80,3 +170,6 @@ chmod 600 "${SETTINGS_FILE}" || true
 echo "Done. Claude Code is configured for DeepSeek model: ${MODEL}"
 echo "Run: claude"
 
+if [ "${INSTALL_CC_SWITCH}" = "1" ]; then
+  install_cc_switch
+fi
