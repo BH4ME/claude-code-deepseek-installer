@@ -33,36 +33,45 @@ $settingsDir = Join-Path $HOME ".claude"
 $settingsFile = Join-Path $settingsDir "settings.json"
 New-Item -ItemType Directory -Force -Path $settingsDir | Out-Null
 
-$settings = [ordered]@{}
-if (Test-Path $settingsFile) {
+$env:CLAUDE_SETTINGS_FILE = $settingsFile
+$env:DEEPSEEK_MODEL_EFFECTIVE = $Model
+$env:DEEPSEEK_BASE_URL_EFFECTIVE = $BaseUrl
+
+@'
+const fs = require("fs");
+
+const settingsFile = process.env.CLAUDE_SETTINGS_FILE;
+const token = process.env.DEEPSEEK_API_KEY;
+const model = process.env.DEEPSEEK_MODEL_EFFECTIVE;
+const baseUrl = process.env.DEEPSEEK_BASE_URL_EFFECTIVE;
+
+let settings = {};
+if (fs.existsSync(settingsFile)) {
   try {
-    $settings = Get-Content $settingsFile -Raw | ConvertFrom-Json -AsHashtable
-  }
-  catch {
-    $backup = "$settingsFile.bak.$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"
-    Copy-Item $settingsFile $backup
-    Write-Warning "Existing settings were invalid JSON. Backed up to $backup"
-    $settings = [ordered]@{}
+    settings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
+  } catch (error) {
+    const backup = `${settingsFile}.bak.${Date.now()}`;
+    fs.copyFileSync(settingsFile, backup);
+    console.warn(`Existing settings were invalid JSON. Backed up to ${backup}`);
   }
 }
 
-if (-not $settings.ContainsKey("env") -or -not $settings["env"]) {
-  $settings["env"] = [ordered]@{}
+settings.env = {
+  ...(settings.env || {}),
+  ANTHROPIC_BASE_URL: baseUrl,
+  ANTHROPIC_AUTH_TOKEN: token,
+  ANTHROPIC_MODEL: model,
+  ANTHROPIC_DEFAULT_HAIKU_MODEL: model,
+  ANTHROPIC_DEFAULT_SONNET_MODEL: model,
+  ANTHROPIC_DEFAULT_OPUS_MODEL: model,
+};
+
+if (settings.includeCoAuthoredBy === undefined) {
+  settings.includeCoAuthoredBy = false;
 }
 
-$settings["env"]["ANTHROPIC_BASE_URL"] = $BaseUrl
-$settings["env"]["ANTHROPIC_AUTH_TOKEN"] = $env:DEEPSEEK_API_KEY
-$settings["env"]["ANTHROPIC_MODEL"] = $Model
-$settings["env"]["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = $Model
-$settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"] = $Model
-$settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"] = $Model
-
-if (-not $settings.ContainsKey("includeCoAuthoredBy")) {
-  $settings["includeCoAuthoredBy"] = $false
-}
-
-$settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsFile -Encoding UTF8
+fs.writeFileSync(settingsFile, `${JSON.stringify(settings, null, 2)}\n`, { mode: 0o600 });
+'@ | node
 
 Write-Host "Done. Claude Code is configured for DeepSeek model: $Model"
 Write-Host "Run: claude"
-
