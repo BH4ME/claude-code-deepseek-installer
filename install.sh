@@ -4,20 +4,25 @@ set -euo pipefail
 MODEL="${DEEPSEEK_MODEL:-deepseek-v4-flash}"
 BASE_URL="${DEEPSEEK_ANTHROPIC_BASE_URL:-https://api.deepseek.com/anthropic}"
 INSTALL_CC_SWITCH="${INSTALL_CC_SWITCH:-0}"
+SKIP_DEEPSEEK_CONFIG="${SKIP_DEEPSEEK_CONFIG:-0}"
 
 for arg in "$@"; do
   case "${arg}" in
     --with-cc-switch)
       INSTALL_CC_SWITCH="1"
       ;;
+    --skip-api-key|--skip-deepseek-config)
+      SKIP_DEEPSEEK_CONFIG="1"
+      ;;
     --help|-h)
-      echo "Usage: install.sh [--with-cc-switch]"
+      echo "Usage: install.sh [--with-cc-switch] [--skip-api-key]"
       echo ""
       echo "Environment:"
       echo "  DEEPSEEK_API_KEY                 DeepSeek API key"
       echo "  DEEPSEEK_MODEL                   Model name, default: deepseek-v4-flash"
       echo "  DEEPSEEK_ANTHROPIC_BASE_URL      API base URL"
       echo "  INSTALL_CC_SWITCH=1              Also install cc-switch"
+      echo "  SKIP_DEEPSEEK_CONFIG=1           Install tools only; configure API later"
       exit 0
       ;;
   esac
@@ -100,9 +105,10 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ -z "${DEEPSEEK_API_KEY:-}" ]; then
+if [ "${SKIP_DEEPSEEK_CONFIG}" != "1" ] && [ -z "${DEEPSEEK_API_KEY:-}" ]; then
   if [ ! -r /dev/tty ]; then
     echo "DeepSeek API key is required. Set DEEPSEEK_API_KEY for non-interactive installs."
+    echo "Or set SKIP_DEEPSEEK_CONFIG=1 to configure the API later with cc-switch."
     exit 1
   fi
   printf "Enter your DeepSeek API key: "
@@ -112,7 +118,7 @@ if [ -z "${DEEPSEEK_API_KEY:-}" ]; then
   printf "\n"
 fi
 
-if [ -z "${DEEPSEEK_API_KEY:-}" ]; then
+if [ "${SKIP_DEEPSEEK_CONFIG}" != "1" ] && [ -z "${DEEPSEEK_API_KEY:-}" ]; then
   echo "DeepSeek API key is required."
   exit 1
 fi
@@ -120,16 +126,17 @@ fi
 echo "Installing or updating Claude Code..."
 npm install -g @anthropic-ai/claude-code
 
-SETTINGS_DIR="${HOME}/.claude"
-SETTINGS_FILE="${SETTINGS_DIR}/settings.json"
-mkdir -p "${SETTINGS_DIR}"
+if [ "${SKIP_DEEPSEEK_CONFIG}" != "1" ]; then
+  SETTINGS_DIR="${HOME}/.claude"
+  SETTINGS_FILE="${SETTINGS_DIR}/settings.json"
+  mkdir -p "${SETTINGS_DIR}"
 
-export SETTINGS_FILE
-export DEEPSEEK_API_KEY
-export MODEL
-export BASE_URL
+  export SETTINGS_FILE
+  export DEEPSEEK_API_KEY
+  export MODEL
+  export BASE_URL
 
-node <<'NODE'
+  node <<'NODE'
 const fs = require("fs");
 
 const settingsFile = process.env.SETTINGS_FILE;
@@ -165,9 +172,12 @@ if (settings.includeCoAuthoredBy === undefined) {
 fs.writeFileSync(settingsFile, `${JSON.stringify(settings, null, 2)}\n`, { mode: 0o600 });
 NODE
 
-chmod 600 "${SETTINGS_FILE}" || true
+  chmod 600 "${SETTINGS_FILE}" || true
 
-echo "Done. Claude Code is configured for DeepSeek model: ${MODEL}"
+  echo "Done. Claude Code is configured for DeepSeek model: ${MODEL}"
+else
+  echo "Skipped DeepSeek API configuration. Use cc-switch later to bind your DeepSeek API key and model."
+fi
 echo "Run: claude"
 
 if [ "${INSTALL_CC_SWITCH}" = "1" ]; then

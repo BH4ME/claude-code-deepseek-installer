@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $Model = if ($env:DEEPSEEK_MODEL) { $env:DEEPSEEK_MODEL } else { "deepseek-v4-flash" }
 $BaseUrl = if ($env:DEEPSEEK_ANTHROPIC_BASE_URL) { $env:DEEPSEEK_ANTHROPIC_BASE_URL } else { "https://api.deepseek.com/anthropic" }
 $InstallCcSwitch = $env:INSTALL_CC_SWITCH -eq "1"
+$SkipDeepSeekConfig = $env:SKIP_DEEPSEEK_CONFIG -eq "1"
 
 function Install-CcSwitch {
   Write-Host "Fetching latest cc-switch release..."
@@ -31,7 +32,7 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
   throw "npm is required. Install npm first, then rerun this installer."
 }
 
-if (-not $env:DEEPSEEK_API_KEY) {
+if (-not $SkipDeepSeekConfig -and -not $env:DEEPSEEK_API_KEY) {
   $secureKey = Read-Host "Enter your DeepSeek API key" -AsSecureString
   $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
   try {
@@ -42,22 +43,23 @@ if (-not $env:DEEPSEEK_API_KEY) {
   }
 }
 
-if (-not $env:DEEPSEEK_API_KEY) {
+if (-not $SkipDeepSeekConfig -and -not $env:DEEPSEEK_API_KEY) {
   throw "DeepSeek API key is required."
 }
 
 Write-Host "Installing or updating Claude Code..."
 npm install -g "@anthropic-ai/claude-code"
 
-$settingsDir = Join-Path $HOME ".claude"
-$settingsFile = Join-Path $settingsDir "settings.json"
-New-Item -ItemType Directory -Force -Path $settingsDir | Out-Null
+if (-not $SkipDeepSeekConfig) {
+  $settingsDir = Join-Path $HOME ".claude"
+  $settingsFile = Join-Path $settingsDir "settings.json"
+  New-Item -ItemType Directory -Force -Path $settingsDir | Out-Null
 
-$env:CLAUDE_SETTINGS_FILE = $settingsFile
-$env:DEEPSEEK_MODEL_EFFECTIVE = $Model
-$env:DEEPSEEK_BASE_URL_EFFECTIVE = $BaseUrl
+  $env:CLAUDE_SETTINGS_FILE = $settingsFile
+  $env:DEEPSEEK_MODEL_EFFECTIVE = $Model
+  $env:DEEPSEEK_BASE_URL_EFFECTIVE = $BaseUrl
 
-@'
+  @'
 const fs = require("fs");
 
 const settingsFile = process.env.CLAUDE_SETTINGS_FILE;
@@ -93,7 +95,11 @@ if (settings.includeCoAuthoredBy === undefined) {
 fs.writeFileSync(settingsFile, `${JSON.stringify(settings, null, 2)}\n`, { mode: 0o600 });
 '@ | node
 
-Write-Host "Done. Claude Code is configured for DeepSeek model: $Model"
+  Write-Host "Done. Claude Code is configured for DeepSeek model: $Model"
+}
+else {
+  Write-Host "Skipped DeepSeek API configuration. Use cc-switch later to bind your DeepSeek API key and model."
+}
 Write-Host "Run: claude"
 
 if ($InstallCcSwitch) {

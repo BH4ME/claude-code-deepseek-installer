@@ -67,6 +67,12 @@ curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/late
 curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | DEEPSEEK_API_KEY="<your-deepseek-api-key>" INSTALL_CC_SWITCH=1 bash
 ```
 
+先不输入 API key，只安装 Claude Code 和 cc-switch，之后用 cc-switch 绑定 DeepSeek：
+
+```bash
+curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | SKIP_DEEPSEEK_CONFIG=1 INSTALL_CC_SWITCH=1 bash
+```
+
 ### 3. 验证 Claude Code
 
 ```bash
@@ -125,6 +131,14 @@ irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/down
 
 ```powershell
 $env:DEEPSEEK_API_KEY="<your-deepseek-api-key>"
+$env:INSTALL_CC_SWITCH="1"
+irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
+```
+
+先不输入 API key，只安装 Claude Code 和 cc-switch，之后用 cc-switch 绑定 DeepSeek：
+
+```powershell
+$env:SKIP_DEEPSEEK_CONFIG="1"
 $env:INSTALL_CC_SWITCH="1"
 irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
 ```
@@ -201,6 +215,8 @@ DeepSeek Anthropic-compatible API 当前常用模型名：
 cc-switch 是一个图形界面工具，可以用来管理 Claude Code、Codex、Gemini 等工具的 provider 配置。
 
 这个项目里的 cc-switch 安装是可选的，因为很多 Linux 服务器没有桌面环境。如果你需要图形界面管理 provider，请使用上面的 `--with-cc-switch` 或 `INSTALL_CC_SWITCH=1`。
+
+如果你不想在部署脚本里输入 API key，可以使用 `SKIP_DEEPSEEK_CONFIG=1`。这种模式只安装 Claude Code 和可选的 cc-switch，不会写入 DeepSeek token。之后你再打开 cc-switch 手动绑定 DeepSeek。
 
 ### Linux
 
