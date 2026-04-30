@@ -220,6 +220,13 @@ claude-deepseek pro
 Windows:
 
 ```powershell
+claude-deepseek flash
+claude-deepseek pro
+```
+
+如果提示 `claude-deepseek` 无法识别，先重新打开 PowerShell 或 CMD。如果仍然不行，使用完整路径：
+
+```powershell
 & "$HOME\.claude-deepseek\claude-deepseek.cmd" flash
 & "$HOME\.claude-deepseek\claude-deepseek.cmd" pro
 ```

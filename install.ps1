@@ -35,10 +35,24 @@ function Install-DeepSeekSwitcher {
   Invoke-WebRequest -Uri $scriptUrl -OutFile $scriptPath
   Invoke-WebRequest -Uri $cmdUrl -OutFile $cmdPath
 
+  $npmPrefix = (& npm config get prefix).Trim()
+  $npmCmdPath = Join-Path $npmPrefix "claude-deepseek.cmd"
+  $npmPs1Path = Join-Path $npmPrefix "switch-deepseek.ps1"
+
+  if ($npmPrefix -and (Test-Path $npmPrefix)) {
+    Copy-Item $scriptPath $npmPs1Path -Force
+    Set-Content -Path $npmCmdPath -Encoding ASCII -Value "@echo off`r`npowershell -NoProfile -ExecutionPolicy Bypass -File `"%~dp0switch-deepseek.ps1`" %*"
+  }
+
   Write-Host "DeepSeek model switcher installed to: $installDir"
+  if ($npmPrefix -and (Test-Path $npmPrefix)) {
+    Write-Host "DeepSeek model switcher command installed to: $npmCmdPath"
+  }
   Write-Host "Switch models with:"
+  Write-Host "  claude-deepseek flash"
+  Write-Host "  claude-deepseek pro"
+  Write-Host "If the command is still not recognized, open a new terminal or run:"
   Write-Host "  $cmdPath flash"
-  Write-Host "  $cmdPath pro"
 }
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
