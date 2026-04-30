@@ -4,6 +4,16 @@
 
 这个仓库不会保存、提交或发布任何 API key。安装时需要你在自己的电脑或服务器上输入 DeepSeek API key，或者通过环境变量临时传入。
 
+## 推荐方式
+
+推荐直接使用本仓库的一键安装脚本，不必安装 cc-switch：
+
+1. 安装 Claude Code CLI。
+2. 自动绑定 DeepSeek API。
+3. 使用内置 `claude-deepseek` 工具在 `deepseek-v4-flash` 和 `deepseek-v4-pro` 之间切换。
+
+cc-switch 仍然是可选项，适合你想用图形界面管理 provider 的情况。
+
 ## 功能
 
 - 安装或更新 `@anthropic-ai/claude-code`
@@ -15,7 +25,7 @@
   - 模型：`deepseek-v4-flash`
 - 保留已有 `settings.json` 里的其他配置项
 - 自动安装 DeepSeek 模型切换工具，可以在 `deepseek-v4-flash` 和 `deepseek-v4-pro` 之间切换
-- 可选安装 `cc-switch`，方便用图形界面切换和管理 Claude Code provider
+- 可选安装 `cc-switch`，用于图形界面切换和管理 Claude Code provider
 
 ## 准备 DeepSeek API Key
 
@@ -24,7 +34,7 @@
 3. 不要把 API key 写进 README、截图、GitHub issue、release notes 或公开脚本。
 4. 安装时按提示粘贴 API key，或用 `DEEPSEEK_API_KEY` 环境变量传入。
 
-## Linux 部署
+## Linux 部署（推荐）
 
 ### 1. 安装 Node.js 和 npm
 
@@ -56,19 +66,19 @@ curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/late
 curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | DEEPSEEK_API_KEY="<your-deepseek-api-key>" bash
 ```
 
-同时安装 cc-switch：
+可选：同时安装 cc-switch：
 
 ```bash
 curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | bash -s -- --with-cc-switch
 ```
 
-非交互式安装并同时安装 cc-switch：
+可选：非交互式安装并同时安装 cc-switch：
 
 ```bash
 curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | DEEPSEEK_API_KEY="<your-deepseek-api-key>" INSTALL_CC_SWITCH=1 bash
 ```
 
-先不输入 API key，只安装 Claude Code 和 cc-switch，之后用 cc-switch 绑定 DeepSeek：
+可选：先不输入 API key，只安装 Claude Code 和 cc-switch，之后用 cc-switch 绑定 DeepSeek：
 
 ```bash
 curl -fsSL https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.sh | SKIP_DEEPSEEK_CONFIG=1 INSTALL_CC_SWITCH=1 bash
@@ -87,7 +97,7 @@ claude
 你当前使用的是什么模型？
 ```
 
-## Windows 部署
+## Windows 部署（推荐）
 
 ### 1. 安装 Node.js 和 npm
 
@@ -121,14 +131,14 @@ $env:DEEPSEEK_API_KEY="<your-deepseek-api-key>"
 irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
 ```
 
-同时安装 cc-switch：
+可选：同时安装 cc-switch：
 
 ```powershell
 $env:INSTALL_CC_SWITCH="1"
 irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
 ```
 
-非交互式安装并同时安装 cc-switch：
+可选：非交互式安装并同时安装 cc-switch：
 
 ```powershell
 $env:DEEPSEEK_API_KEY="<your-deepseek-api-key>"
@@ -136,7 +146,7 @@ $env:INSTALL_CC_SWITCH="1"
 irm https://github.com/BH4ME/claude-code-deepseek-installer/releases/latest/download/install.ps1 | iex
 ```
 
-先不输入 API key，只安装 Claude Code 和 cc-switch，之后用 cc-switch 绑定 DeepSeek：
+可选：先不输入 API key，只安装 Claude Code 和 cc-switch，之后用 cc-switch 绑定 DeepSeek：
 
 ```powershell
 $env:SKIP_DEEPSEEK_CONFIG="1"
@@ -242,7 +252,7 @@ DeepSeek Anthropic-compatible API 当前常用模型名：
 
 ## 不使用 cc-switch
 
-如果你只想用 Claude Code + DeepSeek，不想装 cc-switch，直接运行默认安装命令即可：
+这是推荐方式。如果你只想用 Claude Code + DeepSeek，不想装 cc-switch，直接运行默认安装命令即可：
 
 Linux/macOS:
 
